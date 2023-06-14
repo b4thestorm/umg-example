@@ -3,11 +3,12 @@ import Client from 'shopify-buy'
 
 const ShopContext = React.createContext()
 const client = Client.buildClient({
-    domain: process.env.REACT_APP_SHOPIFY_DOMAIN,
+    domain: process.env.REACT_APP_SHOPIFY_DOMAIN, 
     storefrontAccessToken: process.env.REACT_APP_SHOPIFY_API
 })
 
 class ShopProvider extends Component {
+
     state = {
         product: {},
         products: [],
@@ -16,19 +17,38 @@ class ShopProvider extends Component {
         isMenuOpen: false
     }
 
-    createCheckout = async () => {}
+    componentDidMount() {
+        this.createCheckout()
+    }
+ 
+    createCheckout = async () => {
+        const checkout = await client.checkout.create()
+        localStorage.setItem("checkout-id", checkout.id)
+        this.setState({checkout: checkout})
+    }
+
     fetchCheckout = async () => {}
-    adddItemtoCheckout = async () => {} 
+    addItemtoCheckout = async () => {} 
     removeLineItem = async (lineItemIdsToRemove) => {}
-    fetchAllProducts = async () => {}
-    fetchProductWithHandle = async (handle) => {}
+
+    fetchAllProducts = async () => {
+        const products  = await client.product.fetchAll()
+        this.setState({ products: products })
+    }
+
+    fetchProductWithHandle = (handle) => {
+        client.product.fetchByHandle(handle).then((product) => {
+            this.setState({product: product})
+        });
+    }
     closeCart = () => {}
     openCart = () => {}
     openMenu = () => {}
-
+    
     render() {
+        console.log(process.env.REACT_APP_SHOPIFY_API)
         return (
-            <ShopContext.Provider>
+            <ShopContext.Provider value={[this.state, this.fetchCheckout, this.addItemtoCheckout, this.removeLineItem, this.fetchProductWithHandle ]}>
                 {this.props.children}
             </ShopContext.Provider>
         )
