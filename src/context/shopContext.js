@@ -18,18 +18,24 @@ class ShopProvider extends Component {
     }
 
     componentDidMount() {
-        this.createCheckout()
+        if (localStorage.checkout_id) {
+            this.fetchCheckout(localStorage.checkout_id)
+        } else {
+            this.createCheckout()    
+        }
     }
  
     createCheckout = async () => {
         const checkout = await client.checkout.create()
-        localStorage.setItem("checkout-id", checkout.id)
+        localStorage.setItem("checkout_id", checkout.id)
         this.setState({checkout: checkout})
     }
 
-    fetchCheckout = async () => {}
-    addItemtoCheckout = async () => {} 
-    removeLineItem = async (lineItemIdsToRemove) => {}
+    fetchCheckout = (checkoutId) => {
+        client.checkout.fetch(checkoutId).then((checkout) => {
+            this.setState({checkout: checkout})
+        })
+    }
 
     fetchAllProducts = async () => {
         const products  = await client.product.fetchAll()
@@ -41,14 +47,27 @@ class ShopProvider extends Component {
             this.setState({product: product})
         });
     }
+
+    addItemtoCheckout = async () => {} 
+    removeLineItem = async (lineItemIdsToRemove) => {}
     closeCart = () => {}
     openCart = () => {}
     openMenu = () => {}
     
     render() {
-        console.log(process.env.REACT_APP_SHOPIFY_API)
+        console.log(this.checkout)
         return (
-            <ShopContext.Provider value={[this.state, this.fetchCheckout, this.addItemtoCheckout, this.removeLineItem, this.fetchProductWithHandle ]}>
+            <ShopContext.Provider 
+            value={{ ...this.state,
+                fetchAllProducts: this.fetchAllProducts,
+                fetchProductWithHandle: this.fetchProductWithHandle,
+                addItemToCheckout: this.addItemtoCheckout,
+                removeLineItem: this.removeLineItem,
+                closeCart: this.closeCart,
+                openCart: this.openCart,
+                openMenu: this.openMenu,
+                closeMenu: this.closeMenu
+            }}>
                 {this.props.children}
             </ShopContext.Provider>
         )
