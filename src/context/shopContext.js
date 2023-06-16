@@ -3,8 +3,8 @@ import Client from 'shopify-buy'
 
 const ShopContext = React.createContext()
 const client = Client.buildClient({
-    domain: process.env.REACT_APP_SHOPIFY_DOMAIN, 
-    storefrontAccessToken: process.env.REACT_APP_SHOPIFY_API
+    domain: process.env.REACT_APP_SHOPIFY_API,
+    storefrontAccessToken: process.env.REACT_APP_SHOPIFY_DOMAIN,
 })
 
 class ShopProvider extends Component {
@@ -18,33 +18,36 @@ class ShopProvider extends Component {
     }
 
     componentDidMount() {
+       
+        // , , 
+
         if (localStorage.checkout_id) {
             this.fetchCheckout(localStorage.checkout_id)
         } else {
-            this.createCheckout()    
+            this.createCheckout()
         }
     }
  
     createCheckout = async () => {
         const checkout = await client.checkout.create()
         localStorage.setItem("checkout_id", checkout.id)
-        this.setState({checkout: checkout})
+        let outcheck = {'checkout': checkout}
+        this.setState({...outcheck})
     }
 
     fetchCheckout = (checkoutId) => {
         client.checkout.fetch(checkoutId).then((checkout) => {
-            this.setState({checkout: checkout})
+            let fetchout = {'checkout': checkout}
+            this.setState({...fetchout})
         })
     }
 
-    fetchAllProducts = async () => {
-        const products  = await client.product.fetchAll()
-        this.setState({ products: products })
-    }
+
 
     fetchProductWithHandle = (handle) => {
         client.product.fetchByHandle(handle).then((product) => {
-            this.setState({product: product})
+            let item = {'product': product}
+            this.setState({...item})
         });
     }
 
@@ -55,10 +58,11 @@ class ShopProvider extends Component {
     openMenu = () => {}
     
     render() {
-        console.log(this.checkout)
+
         return (
             <ShopContext.Provider 
             value={{ ...this.state,
+                client: client,
                 fetchAllProducts: this.fetchAllProducts,
                 fetchProductWithHandle: this.fetchProductWithHandle,
                 addItemToCheckout: this.addItemtoCheckout,
